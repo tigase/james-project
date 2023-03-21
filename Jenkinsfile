@@ -90,8 +90,6 @@ pipeline {
             }
 			post {
 				always {
-					junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
-					junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
 					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
