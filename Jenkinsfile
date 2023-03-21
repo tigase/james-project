@@ -36,6 +36,7 @@ pipeline {
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
         MVN_SHOW_TIMESTAMPS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS"
+        MVN_PROFILING = '-Dbuildtime.output.csv=true -Dprofile -DprofileFormat=JSON,HTML'
         CI = true
         LC_CTYPE = 'en_US.UTF-8'
     }
@@ -85,19 +86,31 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT}'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
             }
+			post {
+				always {
+					junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
+					junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
+				}
+			}
         }
 
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
             }
             post {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
                 }
                 failure {
                     archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
@@ -110,13 +123,16 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true  ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
                 }
             }
             post {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                    archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
+                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
+                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
                 }
                 failure {
                     archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
