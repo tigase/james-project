@@ -86,7 +86,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_Build.csv'
             }
 			post {
 				always {
@@ -102,7 +102,7 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_StableTests.csv'
             }
             post {
                 always {
@@ -123,7 +123,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true  ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_${env.STAGE_NAME}.csv'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true  ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_UnstableTests.csv'
                 }
             }
             post {
