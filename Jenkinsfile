@@ -90,9 +90,9 @@ pipeline {
             }
 			post {
 				always {
-					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
-					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
-					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
+					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
 				}
 			}
         }
@@ -106,9 +106,9 @@ pipeline {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
-					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
-					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
+					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
                 }
                 failure {
                     archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
@@ -128,9 +128,9 @@ pipeline {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                    archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: true
-                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: true
-                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: true
+                    archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
+                    archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true, onlyIfSuccessful: true
                 }
                 failure {
                     archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
