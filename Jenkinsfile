@@ -37,6 +37,7 @@ pipeline {
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
         MVN_SHOW_TIMESTAMPS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS"
         MVN_PROFILING = '-Dbuildtime.output.csv=true -Dprofile -DprofileFormat=JSON,HTML'
+        MVN_PARALLEL = '-Daether.dependencyCollector.impl=bf -Dmaven.artifact.threads=5'
         CI = true
         LC_CTYPE = 'en_US.UTF-8'
     }
@@ -86,11 +87,11 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_Build.csv'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT} ${MVN_PARALLEL} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_Build.csv'
             }
 			post {
 				always {
-					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
+					archiveArtifacts artifacts: '**/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true
 				}
@@ -100,13 +101,13 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_StableTests.csv'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PARALLEL} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_StableTests.csv'
             }
             post {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-					archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
+					archiveArtifacts artifacts: '**/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true
 					archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true
                 }
@@ -121,14 +122,14 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true  ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_UnstableTests.csv'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true ${MVN_PARALLEL} ${MVN_PROFILING} -Dbuildtime.output.csv.file=buildstats_UnstableTests.csv'
                 }
             }
             post {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                    archiveArtifacts artifacts: '**/target/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
+                    archiveArtifacts artifacts: '**/buildstats*.log' , fingerprint: false, allowEmptyArchive: true
                     archiveArtifacts artifacts: '**/.profiler/profiler-report*.html' , fingerprint: false, allowEmptyArchive: true
                     archiveArtifacts artifacts: '**/.profiler/profiler-report*.json' , fingerprint: false, allowEmptyArchive: true
                 }
